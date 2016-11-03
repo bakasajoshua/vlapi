@@ -22,7 +22,8 @@ class Summaries_model extends MY_Model
 		}
 
 		$sql = "CALL `proc_get_national_tat`('".$year."','".$month."')";
-		echo "<pre>";print_r($this->req('https://api.nascop.org/vl/ver1.0/national?aggregationPeriod=[201601]'));die();
+		// echo "<pre>";print_r($this->req('https://api.nascop.org/vl/ver1.0/national?aggregationPeriod=[201601]'));die();
+		//return $this->req('https://api.nascop.org/vl/ver1.0/national?aggregationPeriod=[2016]');
 		// echo "<pre>";print_r($sql);die();
 		$result = $this->db->query($sql)->result_array();
 		// echo "<pre>";print_r($result);die();
