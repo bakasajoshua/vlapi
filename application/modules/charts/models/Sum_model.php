@@ -44,10 +44,10 @@ class Sum_model extends MY_Model
 			$count = 0;
 
 			foreach ($info as $key => $value) {
-				$data['tat1'] = $value->TestTAT->CollectionToLabReceipt;
-				$data['tat2'] = $value->TestTAT->LabReceiptToTesting;
-				$data['tat3'] = $value->TestTAT->TestedToDispatch;
-				$data['tat4'] = $value->TestTAT->CollectionToLabReceipt + $value->TestTAT->LabReceiptToTesting + $value->TestTAT->TestedToDispatch;
+				$data['tat1'] += $value->TestTAT->CollectionToLabReceipt;
+				$data['tat2'] += $value->TestTAT->LabReceiptToTesting;
+				$data['tat3'] += $value->TestTAT->TestedToDispatch;
+				$data['tat4'] += $value->TestTAT->CollectionToLabReceipt + $value->TestTAT->LabReceiptToTesting + $value->TestTAT->TestedToDispatch;
 				$count++;
 			}
 
@@ -483,7 +483,13 @@ class Sum_model extends MY_Model
 		
 		$data["ageGnd"][0]["data"][0]	= $count;
 		$data["ageGnd"][1]["data"][0]	= $count;
-		$data['categories'][0]			= 'No Data';
+		$data['categories'][0]			= '';
+		$data['categories'][1]			= 'Less 2';
+		$data['categories'][2]			= '2-9';
+		$data['categories'][3]			= '10-14';
+		$data['categories'][4]			= '15-19';
+		$data['categories'][5]			= '20-24';
+		$data['categories'][6]			= '25+';
 
 		$data["ageGnd"][0]["data"][1] = 0;
 		$data["ageGnd"][0]["data"][2] = 0;
@@ -501,6 +507,39 @@ class Sum_model extends MY_Model
 
 
 		if ($month==null || $month=='null') {
+			$count = 0;
+			foreach ($information->data->Period as $key => $value) {
+				$result = $value->Results->TotalByAge;
+				$data["ageGnd"][0]["data"][1] += $result->NonSuppressedBelowAge2;
+				$data["ageGnd"][0]["data"][2] += $result->NonSuppressedBelowAge10;
+				$data["ageGnd"][0]["data"][3] += $result->NonSuppressedBelowAge15;
+				$data["ageGnd"][0]["data"][4] += $result->NonSuppressedBelowAge20;
+				$data["ageGnd"][0]["data"][5] += $result->NonSuppressedAboveAge25;
+				$data["ageGnd"][0]["data"][6] += $result->NonSuppressedNoAge;
+
+				$data["ageGnd"][1]["data"][1] += $result->SupressedBelowAge2;
+				$data["ageGnd"][1]["data"][2] += $result->SupressedBelowAge10;
+				$data["ageGnd"][1]["data"][3] += $result->SupressedBelowAge15;
+				$data["ageGnd"][1]["data"][4] += $result->SupressedBelowAge20;
+				$data["ageGnd"][1]["data"][5] += $result->SupressedAboveAge25;
+				$data["ageGnd"][1]["data"][6] += $result->SupressedNoAge;
+
+				$count++;
+			}
+
+			$data["ageGnd"][0]["data"][1] += round($data["ageGnd"][0]["data"][1] / $count);
+			$data["ageGnd"][0]["data"][2] += round($data["ageGnd"][0]["data"][2] / $count);
+			$data["ageGnd"][0]["data"][3] += round($data["ageGnd"][0]["data"][3] / $count);
+			$data["ageGnd"][0]["data"][4] += round($data["ageGnd"][0]["data"][4] / $count);
+			$data["ageGnd"][0]["data"][5] += round($data["ageGnd"][0]["data"][5] / $count);
+			$data["ageGnd"][0]["data"][6] += round($data["ageGnd"][0]["data"][6] / $count);
+
+			$data["ageGnd"][1]["data"][1] += round($data["ageGnd"][1]["data"][1] / $count);
+			$data["ageGnd"][1]["data"][2] += round($data["ageGnd"][1]["data"][2] / $count);
+			$data["ageGnd"][1]["data"][3] += round($data["ageGnd"][1]["data"][3] / $count);
+			$data["ageGnd"][1]["data"][4] += round($data["ageGnd"][1]["data"][4] / $count);
+			$data["ageGnd"][1]["data"][5] += round($data["ageGnd"][1]["data"][5] / $count);
+			$data["ageGnd"][1]["data"][6] += round($data["ageGnd"][1]["data"][6] / $count);
 
 		}
 		else{
