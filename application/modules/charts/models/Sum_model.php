@@ -63,7 +63,7 @@ class Sum_model extends MY_Model
 			$data['tat3'] = $info[0]->TestTAT->TestedToDispatch;
 			$data['tat4'] = $info[0]->TestTAT->CollectionToLabReceipt + $info[0]->TestTAT->LabReceiptToTesting + $info[0]->TestTAT->TestedToDispatch;
 		}
-
+		echo "<pre>";print_r($data);die();
 		return $data;
 	}
 
@@ -124,7 +124,7 @@ class Sum_model extends MY_Model
 			$data["county_outcomes"][0]["data"][$key]	=  (int) $value['nonsuppressed'];
 			$data["county_outcomes"][1]["data"][$key]	=  (int) $value['suppressed'];
 		}
-		// echo "<pre>";print_r($data);die();
+		echo "<pre>";print_r($data);die();
 		return $data;
 	}
 
@@ -209,7 +209,7 @@ class Sum_model extends MY_Model
 
 		$data['vl_outcomes']['data'][0]['sliced'] = true;
 		$data['vl_outcomes']['data'][0]['selected'] = true;
-		
+		echo "<pre>";print_r($data);die();
 		return $data;
 	}
 
@@ -337,7 +337,7 @@ class Sum_model extends MY_Model
 
 		$data['justification']['data'][1]['sliced'] = true;
 		$data['justification']['data'][1]['selected'] = true;
-		// echo "<pre>";print_r($data);die();
+		echo "<pre>";print_r($data);die();
 		return $data;
 	}
 
@@ -416,7 +416,7 @@ class Sum_model extends MY_Model
 
 		$data['just_breakdown'][0]['drilldown']['color'] = '#913D88';
 		$data['just_breakdown'][1]['drilldown']['color'] = '#96281B';
-				
+		echo "<pre>";print_r($data);die();
 		return $data;
 	}
 
@@ -567,7 +567,7 @@ class Sum_model extends MY_Model
 		$data['categories'] = array_values($data['categories']);
 		$data["ageGnd"][0]["data"] = array_values($data["ageGnd"][0]["data"]);
 		$data["ageGnd"][1]["data"] = array_values($data["ageGnd"][1]["data"]);
-		// echo "<pre>";print_r($data);die();
+		echo "<pre>";print_r($data);die();
 		return $data;
 	}
 
@@ -650,7 +650,7 @@ class Sum_model extends MY_Model
 		$data['adults']['data'][0]['sliced'] = true;
 		$data['adults']['data'][0]['selected'] = true;
 
-		// echo "<pre>";print_r($data);die();
+		echo "<pre>";print_r($data);die();
 		
 		return $data;
 	}
@@ -704,7 +704,7 @@ class Sum_model extends MY_Model
 
 		$data['gender'][0]['drilldown']['color'] = '#913D88';
 		$data['gender'][1]['drilldown']['color'] = '#96281B';
-		
+		echo "<pre>";print_r($data);die();
 		return $data;
 	}
 
@@ -771,7 +771,7 @@ class Sum_model extends MY_Model
 			$data["sample_types"][2]["data"][$key]	= (int) $value->SampleTypes->FrozenPlasma;
 			
 		}
-		
+		echo "<pre>";print_r($data);die();
 		return $data;
 	}
 
