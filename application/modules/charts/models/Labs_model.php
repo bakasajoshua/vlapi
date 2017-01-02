@@ -6,7 +6,36 @@ defined("BASEPATH") or exit("No direct script access allowed!");
 */
 class Labs_model extends MY_Model
 {
-	
+	function _fetch_api_lab_data($year=NULL,$month=NULL)
+	{
+		if ($year==null || $year=='null') {
+			$year = $this->session->userdata('filter_year');
+		}
+		if ($month==null || $month=='null') {
+			if ($this->session->userdata('filter_month')==null || $this->session->userdata('filter_month')=='null') {
+				$month = $this->session->userdata('filter_month');
+			}else {
+				$month = NULL;
+			}
+		}
+
+		$link = 'https://api.nascop.org/vl/ver1.0/laboratory?aggregationPeriod=['.$year.$month.']';
+		// echo $link;
+		$result = $this->req($link);
+		// $extraction = array();
+		// foreach ($result as $value) {
+		// 	foreach ($value as $key1 => $value1) {
+		// 		$extraction[$key1]['labname'] = $value1['LaboratoryName'];
+		// 		$extraction[$key1]['tat1'] = (int) $value1['Period'][0]['TestTAT']['CollectionToLabReceipt'];
+		// 		$extraction[$key1]['tat2'] = (int) $value1['Period'][0]['TestTAT']['LabReceiptToTesting'];
+		// 		$extraction[$key1]['tat3'] = (int) $value1['Period'][0]['TestTAT']['TestedToDispatch'];
+		// 		$extraction[$key1]['tat4'] = (int) ($extraction[$key1]['tat1']+$extraction[$key1]['tat2']+$extraction[$key1]['tat3']);
+		// 	}
+		// }
+		// print_r($extraction);die();
+		return $result;
+	}
+
 	function lab_testing_trends($year=NULL)
 	{
 		if ($year==null || $year=='null') {
@@ -96,10 +125,9 @@ class Labs_model extends MY_Model
 			}
 		}
 		
-		$sql = "CALL `proc_get_labs_sampletypes`('".$year."','".$month."')";
-		
 		// echo "<pre>";print_r($sql);die();
-		$result = $this->db->query($sql)->result_array();
+		$result = $this->_fetch_api_lab_data($year,$month);
+		// echo "<pre>";print_r($result);die();
 
 		$data['sample_types'][0]['name'] = 'EDTA';
 		$data['sample_types'][1]['name'] = 'DBS';
@@ -107,21 +135,24 @@ class Labs_model extends MY_Model
 
 		$count = 0;
 		
-		$data['categories'][0] = 'No Data';
-		$data["sample_types"][0]["data"][0]	= $count;
-		$data["sample_types"][1]["data"][0]	= $count;
-		$data["sample_types"][2]["data"][0]	= $count;
+		if (is_array($result) || is_object($result))
+		{	
+			foreach ($result as $value) {
+				foreach ($value as $key1 => $value1) {
+						$data['categories'][$key1] = $value1['LaboratoryName'];
 
-		foreach ($result as $key => $value) {
-			
-				$data['categories'][$key] = $value['labname'];
-
-				$data["sample_types"][0]["data"][$key]	= (int) $value['edta'];
-				$data["sample_types"][1]["data"][$key]	= (int) $value['dbs'];
-				$data["sample_types"][2]["data"][$key]	= (int) $value['plasma'];
-			
+						$data['sample_types'][0]['data'][$key1] = (int) $value1['Period'][0]['SampleTypes']['DBS'];
+						$data['sample_types'][1]['data'][$key1] = (int) $value1['Period'][0]['SampleTypes']['FrozenPlasma'];
+						$data['sample_types'][2]['data'][$key1] = (int) $value1['Period'][0]['SampleTypes']['EDTA'];
+				}
+			}
+		} else {
+			$data['categories'][0] = 'No Data';
+			$data["sample_types"][0]["data"][0]	= $count;
+			$data["sample_types"][1]["data"][0]	= $count;
+			$data["sample_types"][2]["data"][0]	= $count;
 		}
-		//echo "<pre>";print_r($data);die();
+		// echo "<pre>";print_r($data);die();
 		return $data;
 	}
 
@@ -138,9 +169,19 @@ class Labs_model extends MY_Model
 			}
 		}
 
-		$sql = "CALL `proc_get_labs_tat`('".$year."','".$month."')";
-		// echo "<pre>";print_r($sql);die();
-		$result = $this->db->query($sql)->result_array();
+		$result = $this->_fetch_api_lab_data($year,$month);
+		// echo "<pre>";print_r($result);die();
+		$extraction = array();
+		foreach ($result as $value) {
+			foreach ($value as $key1 => $value1) {
+				$extraction[$key1]['labname'] = $value1['LaboratoryName'];
+				$extraction[$key1]['tat1'] = (int) $value1['Period'][0]['TestTAT']['CollectionToLabReceipt'];
+				$extraction[$key1]['tat2'] = (int) $value1['Period'][0]['TestTAT']['LabReceiptToTesting'];
+				$extraction[$key1]['tat3'] = (int) $value1['Period'][0]['TestTAT']['TestedToDispatch'];
+				$extraction[$key1]['tat4'] = (int) ($extraction[$key1]['tat1']+$extraction[$key1]['tat2']+$extraction[$key1]['tat3']);
+			}
+		}
+		// echo "<pre>";print_r($extraction);die();
 		$lab = NULL;
 		$count = 1;
 		$tat1 = 0;
@@ -149,9 +190,8 @@ class Labs_model extends MY_Model
 		$tat4 = 0;
 		$tat = array();
 		
-		foreach ($result as $key => $value) {
-			if (($value['tat1']!=0) || ($value['tat2']!=0) || ($value['tat3']!=0) || ($value['tat4']!=0)) {
-				$labname = strtolower(str_replace(" ", "_", $value['labname']));
+		foreach ($extraction as $key => $value) {
+			$labname = strtolower(str_replace(" ", "_", $value['labname']));
 				if ($lab) {
 					if ($lab==$value['labname']) {
 						$tat1 = $tat1+$value['tat1'];
@@ -201,7 +241,7 @@ class Labs_model extends MY_Model
 
 					$count++;
 				}
-			}
+			
 		}
 		// echo "<pre>";print_r($tat);die();
 		foreach ($tat as $key => $value) {
@@ -210,7 +250,7 @@ class Labs_model extends MY_Model
 			$data[$key]['tat3'] = round(($value['tat3']/$value['count']) + $data[$key]['tat2']);
 			$data[$key]['tat4'] = round($value['tat4']/$value['count']);
 		}
-		// echo "<pre>";print_r($data);
+		// echo "<pre>";print_r($data);die();
 		return $data;
 	}
 
@@ -231,7 +271,7 @@ class Labs_model extends MY_Model
 		
 		// echo "<pre>";print_r($sql);die();
 		$result = $this->db->query($sql)->result_array();
-		
+		// echo "<pre>";print_r($result);die();
 		$data['lab_outcomes'][0]['name'] = 'Not Suppressed';
 		$data['lab_outcomes'][1]['name'] = 'Suppressed';
 

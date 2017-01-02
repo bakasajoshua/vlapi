@@ -62,7 +62,7 @@ class MY_Model extends CI_Model
 		$headers = array('X-Auth-Token' => 'jhWXc65gZUI=yG5ndWkpAGNsaW50b85oZWFsdGhhY2Nlc3Mub3Jn');
 		$request = $this->requests->get($url, $headers);
 
-		return json_decode($request->body);
+		return json_decode(json_encode(json_decode($request->body)), true);
 	}
 }
 ?>

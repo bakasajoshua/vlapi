@@ -13,6 +13,11 @@ class Labs extends MY_Controller
 		$this->load->model('labs_model');
 	}
 
+	function testing_lab_api($year=NULL,$month=NULL)
+	{
+		$this->labs_model->_fetch_api_lab_data($year,$month);
+	}
+
 	function testing_trends($year=NULL)
 	{
 		$data['trends'] = $this->labs_model->lab_testing_trends($year);
