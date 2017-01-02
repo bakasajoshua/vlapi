@@ -84,7 +84,6 @@ class Sites_model extends MY_Model
 			$table .= '<td>'.$value['county'].'</td>';
 			$table .= '<td>'.$value['tests'].'</td>';
 			$table .= '<td>'.$value['sustxfail'].'</td>';
-			$table .= '<td>'.$value['repeatvl'].'</td>';
 			$table .= '<td>'.$value['confirmtx'].'</td>';
 			$table .= '<td>'.$value['rejected'].'</td>';
 			$table .= '<td>'.$value['adults'].'</td>';
@@ -340,6 +339,90 @@ class Sites_model extends MY_Model
 		$data["Gnd"]["color"] =  '#1BA39C';
 
 		return $data;
+	}
+
+	function partner_sites_outcomes_download($year=NULL,$month=NULL,$partner=NULL)
+	{
+		if ($year==null || $year=='null') {
+			$year = $this->session->userdata('filter_year');
+		}
+		if ($month==null || $month=='null') {
+			if ($this->session->userdata('filter_month')==null || $this->session->userdata('filter_month')=='null') {
+				$month = 0;
+			}else {
+				$month = $this->session->userdata('filter_month');
+			}
+		}
+
+		$sql = "CALL `proc_get_partner_sites_details`('".$partner."','".$year."','".$month."')";
+		// echo "<pre>";print_r($sql);die();
+		$data = $this->db->query($sql)->result_array();
+		// echo "<pre>";print_r($data);die();
+		
+
+		// $this->load->helper('download');
+  //       $this->load->library('PHPReport/PHPReport');
+
+  //       ini_set('memory_limit','-1');
+	 //    ini_set('max_execution_time', 900);
+
+
+  //       $template = 'partner_sites.xlsx';
+
+	 //    //set absolute path to directory with template files
+	 //    $templateDir = __DIR__ . "/";
+	    
+	 //    //set config for report
+	 //    $config = array(
+	 //        'template' => $template,
+	 //        'templateDir' => $templateDir
+	 //    );
+
+
+	 //      //load template
+	 //    $R = new PHPReport($config);
+	    
+	 //    $R->load(array(
+	 //            'id' => 'data',
+	 //            'repeat' => TRUE,
+	 //            'data' => $data   
+	 //        )
+	 //    );
+	      
+	 //      // define output directoy 
+	 //    $output_file_dir = __DIR__ ."/tmp/";
+	 //     // echo "<pre>";print_r("Still working");die();
+
+	 //    $output_file_excel = $output_file_dir  . "partner_sites.xlsx";
+	 //    //download excel sheet with data in /tmp folder
+	 //    $result = $R->render('excel', $output_file_excel);
+	 //    force_download($output_file_excel, null);	
+
+        $this->load->helper('file');
+        $this->load->helper('download');
+        $delimiter = ",";
+        $newline = "\r\n";
+
+	    /** open raw memory as file, no need for temp files, be careful not to run out of memory thought */
+	    $f = fopen('php://memory', 'w');
+	    /** loop through array  */
+
+	    $b = array('MFL Code', 'Name', 'County', 'Tests', '>1000cp/ml', 'Confirm Repeat Tests', 'Rejected', 'Adult Tests', 'Peads Tests', 'Male', 'Female');
+
+	    fputcsv($f, $b, $delimiter);
+
+	    foreach ($data as $line) {
+	        /** default php csv handler **/
+	        fputcsv($f, $line, $delimiter);
+	    }
+	    /** rewrind the "file" with the csv lines **/
+	    fseek($f, 0);
+	    /** modify header to be downloadable csv file **/
+	    header('Content-Type: application/csv');
+	    header('Content-Disposition: attachement; filename="vl_partner_sites.csv";');
+	    /** Send file to browser for download */
+	    fpassthru($f);
+		
 	}
 }
 ?>

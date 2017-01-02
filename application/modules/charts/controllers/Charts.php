@@ -19,5 +19,10 @@ class Charts extends MY_Controller {
 		
 	}
 
+	function number_format()
+	{
+		echo number_format("10000000.1",2)."<br>";
+	}
+
 }
 ?>
