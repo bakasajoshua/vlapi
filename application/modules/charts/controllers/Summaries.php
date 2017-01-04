@@ -21,7 +21,7 @@ class Summaries extends MY_Controller {
 	
 	function county_outcomes($year=NULL,$month=NULL,$pfil=NULL,$partner=NULL,$county=NULL)
 	{
-		$data['outcomes'] = $this->summaries_model->county_outcomes($year,$month,$pfil,$partner,$county);
+		$data['outcomes'] = $this->sum_model->county_outcomes($year,$month,$pfil,$partner,$county);
 		echo json_encode($data);
 
     	// $this->load->view('county_outcomes_view',$data);
@@ -29,7 +29,7 @@ class Summaries extends MY_Controller {
 
 	function vl_outcomes($year=NULL,$month=NULL,$county=NULL,$partner=NULL)
 	{
-		$data['outcomes'] = $this->summaries_model->vl_outcomes($year,$month,$county,$partner);
+		$data['outcomes'] = $this->sum_model->vl_outcomes($year,$month,$county,$partner);
 
 		echo json_encode($data);
     	//$this->load->view('vl_outcomes_view',$data);
@@ -45,7 +45,7 @@ class Summaries extends MY_Controller {
 
 	function justificationbreakdown($year=NULL,$month=NULL,$county=NULL,$partner=NULL)
 	{
-		$data['outcomes'] = $this->summaries_model->justification_breakdown($year,$month,$county,$partner);
+		$data['outcomes'] = $this->sum_model->justification_breakdown($year,$month,$county,$partner);
 		echo json_encode($data);
 		
 		//$this->load->view('justification_breakdown_view',$data);

@@ -10,12 +10,12 @@ class Partner_trends extends MY_Controller
 	function __construct()
 	{
 		parent:: __construct();
-		$this->load->model('partner_trends_model');
+		$this->load->model('partner_trend_api_model');
 	}
 
 	function positive_trends($partner=NULL){
-		$obj = $this->partner_trends_model->yearly_trends($partner);
-		// echo "<pre>";print_r($obj);echo "</pre>";die();
+		$obj = $this->partner_trend_api_model->yearly_trends($partner);
+		echo "<pre>";print_r($obj);echo "</pre>";die();
 
 		$data['trends'] = $obj['suppression_trends'];
 		$data['title'] = "Suppression Trends";
@@ -56,10 +56,10 @@ class Partner_trends extends MY_Controller
 	}
 
 	function summary($partner=NULL){
-		$data['trends'] = $this->partner_trends_model->yearly_summary($partner);
+		$data['trends'] = $this->partner_trend_api_model->yearly_summary($partner);
 		//$data['trends'] = $this->positivity_model->yearly_summary();
 		//echo json_encode($data);
-		// echo "<pre>";print_r($data);die();
+		echo "<pre>";print_r($data);die();
 		$this->load->view('trends_outcomes_view', $data);
 	}
 
