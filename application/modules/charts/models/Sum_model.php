@@ -33,7 +33,7 @@ class Sum_model extends MY_Model
 		//Assigning the value of the month or setting it to the selected value
 		if ($month==null || $month=='null') {
 			if ($this->session->userdata('filter_month')==null || $this->session->userdata('filter_month')=='null') {
-
+				$month = '';
 			}else {
 				$month = $this->session->userdata('filter_month');
 			}
@@ -78,7 +78,7 @@ class Sum_model extends MY_Model
 		//Assigning the value of the month or setting it to the selected value
 		if ($month==null || $month=='null') {
 			if ($this->session->userdata('filter_month')==null || $this->session->userdata('filter_month')=='null') {
-				$month = 0;
+				$month = '';
 			}else {
 				$month = $this->session->userdata('filter_month');
 			}
@@ -92,6 +92,12 @@ class Sum_model extends MY_Model
 		if ($partner==null || $partner=='null') {
 			$partner = $this->session->userdata('partner_filter');
 		}
+
+		$param = $this->set_period_param($year, $month);
+
+		$data['county_outcomes'][0]['name'] = 'Not Suppresed';
+		$data['county_outcomes'][1]['name'] = 'Suppresed';
+
 				
 		// echo "PFil: ".$pfil." --Partner: ".$partner." -- County: ".$county;
 		if ($county) {
@@ -99,18 +105,55 @@ class Sum_model extends MY_Model
 		} else {
 			if ($pfil==1) {
 				if ($partner) {
-					$sql = "CALL `proc_get_partner_sites_outcomes`('".$partner."','".$year."','".$month."')";
+					// $sql = "CALL `proc_get_partner_sites_outcomes`('".$partner."','".$year."','".$month."')";
+					$data = $this->get_partner_sites_outcomes($param, $partner);
+					echo "<pre>";print_r($data);echo "</pre>";die();
 				} else {
-					$sql = "CALL `proc_get_partner_outcomes`('".$year."','".$month."')";
+					// $sql = "CALL `proc_get_partner_outcomes`('".$year."','".$month."')";
+					$data = $this->get_partners_outcomes($param);
+					echo "<pre>";print_r($data);echo "</pre>";die();
 				}
 				
 			} else {
-				$sql = "CALL `proc_get_county_outcomes`('".$year."','".$month."')";
+				// $sql = "CALL `proc_get_county_outcomes`('".$year."','".$month."')";
+				// $county_data = $this->req('https://api.nascop.org/vl/ver1.0/admin/county');
+				// //echo "<pre>";print_r($county_data);echo "</pre>";die();
+				// $data["county_outcomes"][0]["data"] = array_fill(0, 47, 0);
+				// $data["county_outcomes"][1]["data"] = array_fill(0, 47, 0);
+
+				// foreach ($county_data['data'] as $key => $value) {
+
+				// 	$information = $this->req('https://api.nascop.org/vl/ver1.0/county?mflCode=' . $value['CountyMFLCode'] . '&aggregationPeriod=[' . $param . ']');
+
+				// 	$data['categories'][$key] = $value['CountyName'];
+
+				// 	foreach ($information['data'][0]['Period'] as $key2 => $value2) {
+				// 		$data["county_outcomes"][0]["data"][$key] += $value2['TestsDone']['NonSuppressed'];
+				// 		$data["county_outcomes"][1]["data"][$key] += $value2['TestsDone']['Suppressed'];
+
+				// 		// echo "<pre>";print_r($data);echo "</pre>";die();
+				// 	}
+				// }
+				$data = $this->get_county_outcomes($param);
+				echo "<pre>";print_r($data);echo "</pre>";die();
 			}
 		}
-		// echo "<pre>";print_r($sql);echo "</pre>";die();
-		$result = $this->db->query($sql)->result_array();
+		//echo "<pre>";print_r($sql);echo "</pre>";die();
+		//$result = $this->db->query($sql)->result_array();
 		// echo "<pre>";print_r($result);die();
+
+		
+
+		
+
+		// $result;
+		// if($county || $partner){
+		// 	$result = $information['data'][0]['Period'];
+		// }
+		// else{
+		// 	$result = $information['data']['Period'];
+		// }
+
 		$data['county_outcomes'][0]['name'] = 'Not Suppresed';
 		$data['county_outcomes'][1]['name'] = 'Suppresed';
 
@@ -146,7 +189,7 @@ class Sum_model extends MY_Model
 
 		if ($month==null || $month=='null') {
 			if ($this->session->userdata('filter_month')==null || $this->session->userdata('filter_month')=='null') {
-				
+				$month = '';
 			}else {
 				$month = $this->session->userdata('filter_month');
 			}
@@ -156,12 +199,12 @@ class Sum_model extends MY_Model
 		$param = $this->set_period_param($year, $month);
 
 		if ($partner) {
-			$url = 'https://api.nascop.org/vl/ver1.0/partner?partnerId=1&aggregationPeriod=[';
+			$url = 'https://api.nascop.org/vl/ver1.0/partner?partnerId=' . $partner . '&aggregationPeriod=[';
 		} else {
 			if ($county==null || $county=='null') {
 				$url = 'https://api.nascop.org/vl/ver1.0/national?aggregationPeriod=[';
 			} else {
-				$url = 'https://api.nascop.org/vl/ver1.0/county?mflCode=40&dhisCode=wsBsC6gjHvn&aggregationPeriod=[';
+				$url = 'https://api.nascop.org/vl/ver1.0/county?mflCode=' . $county . '&aggregationPeriod=[';
 			}
 		}
 
@@ -188,21 +231,22 @@ class Sum_model extends MY_Model
 		$data['vl_outcomes']['data'][0]['selected'] = true;
 
 		
-		$info = $this->req($url);
+		$information = $this->req($url);
 
-		if(!$month){
-			$data['vl_outcomes']['data'][0]['y'] = 0;
-			$data['vl_outcomes']['data'][1]['y'] = 0;
-
-			foreach ($info['data']['Period'] as $key => $value) {
-				$data['vl_outcomes']['data'][0]['y'] += $value['TestsDone']['Suppressed'];
-				$data['vl_outcomes']['data'][1]['y'] += $value['TestsDone']['NonSuppressed'];
-				
-			}
+		$result;
+		if($county || $partner){
+			$result = $information['data'][0]['Period'];
 		}
 		else{
-			$data['vl_outcomes']['data'][0]['y'] = $info['data']['Period'][0]['TestsDone']['Suppressed'];
-			$data['vl_outcomes']['data'][1]['y'] = $info['data']['Period'][0]['TestsDone']['NonSuppressed'];
+			$result = $information['data']['Period'];
+		}
+
+		$data['vl_outcomes']['data'][0]['y'] = 0;
+		$data['vl_outcomes']['data'][1]['y'] = 0;
+
+		foreach ($result as $key => $value) {
+			$data['vl_outcomes']['data'][0]['y'] += $value['TestsDone']['Suppressed'];
+			$data['vl_outcomes']['data'][1]['y'] += $value['TestsDone']['NonSuppressed'];
 		}
 
 		$greater = $data['vl_outcomes']['data'][1]['y'];
@@ -272,7 +316,7 @@ class Sum_model extends MY_Model
 		//Assigning the value of the month or setting it to the selected value
 		if ($month==null || $month=='null') {
 			if ($this->session->userdata('filter_month')==null || $this->session->userdata('filter_month')=='null') {
-				
+				$month = '';
 			}else {
 				$month = $this->session->userdata('filter_month');
 			}
@@ -283,18 +327,23 @@ class Sum_model extends MY_Model
 		$information;
 
 		if ($partner) {
-
 			$information = $this->req('https://api.nascop.org/vl/ver1.0/partner?partnerId='  . $partner . '&aggregationPeriod=[' . $param . ']');
-
 		} 
 		if(!$partner){
 			if ($county==null || $county=='null') {
-
 				$information = $this->req('https://api.nascop.org/vl/ver1.0/national?aggregationPeriod=[' . $param . ']');
 			} 
 			else {
-				$information = $this->req('https://api.nascop.org/vl/ver1.0/county?dhisCode=' . $county . '&aggregationPeriod=[' . $param . ']');
+				$information = $this->req('https://api.nascop.org/vl/ver1.0/county?mflCode=' . $county . '&aggregationPeriod=[' . $param . ']');
 			}
+		}
+
+		$result;
+		if($county || $partner){
+			$result = $information['data'][0]['Period'];
+		}
+		else{
+			$result = $information['data']['Period'];
 		}
 
 		//echo "<pre>";print_r($information);die();
@@ -334,7 +383,7 @@ class Sum_model extends MY_Model
 		$data['justification']['data'][7]['y'] = 0;
 		$data['justification']['data'][8]['y'] = 0;
 
-		foreach ($information['data']['Period'] as $key => $value) {
+		foreach ($result as $key => $value) {
 			$data['justification']['data'][0]['y'] += $value['TestJustification']['RoutineTestingTotalTests'];
 			$data['justification']['data'][1]['y'] += $value['TestJustification']['BaselineTestingTotalTests'];
 			$data['justification']['data'][2]['y'] += $value['TestJustification']['ClinicalFailureTotalTests'];
@@ -382,7 +431,7 @@ class Sum_model extends MY_Model
 		//Assigning the value of the month or setting it to the selected value
 		if ($month==null || $month=='null') {
 			if ($this->session->userdata('filter_month')==null || $this->session->userdata('filter_month')=='null') {
-				
+				$month = '';
 			}else {
 				$month = $this->session->userdata('filter_month');
 			}
@@ -404,8 +453,16 @@ class Sum_model extends MY_Model
 				$information = $this->req('https://api.nascop.org/vl/ver1.0/national?aggregationPeriod=[' . $param . ']');
 			} 
 			else {
-				$information = $this->req('https://api.nascop.org/vl/ver1.0/county?dhisCode=' . $county . '&aggregationPeriod=[' . $param . ']');
+				$information = $this->req('https://api.nascop.org/vl/ver1.0/county?mflCode=' . $county . '&aggregationPeriod=[' . $param . ']');
 			}
+		}
+
+		$result;
+		if($county || $partner){
+			$result = $information['data'][0]['Period'];
+		}
+		else{
+			$result = $information['data']['Period'];
 		}
 		// echo "<pre>";print_r($sql);
 		// echo "<pre>";print_r($sql2);die();
@@ -424,7 +481,7 @@ class Sum_model extends MY_Model
 		$data["just_breakdown"][0]["data"][1]	=  0;
 		$data["just_breakdown"][1]["data"][1]	=  0;
 
-		foreach ($information['data']['Period'] as $key => $value) {
+		foreach ($result as $key => $value) {
 
 			$data["just_breakdown"][0]["data"][0] +=  $value['TestJustification']['PregnantMotherNonSuppressed'];
 			$data["just_breakdown"][1]["data"][0] +=  $value['TestJustification']['PregnantMotherSuppressed'];
@@ -441,8 +498,6 @@ class Sum_model extends MY_Model
 
 	function age($year=null,$month=null,$county=null,$partner=null)
 	{
-		
-		
 
 		if ($county==null || $county=='null') {
 			$county = $this->session->userdata('county_filter');
@@ -459,7 +514,7 @@ class Sum_model extends MY_Model
 		//Assigning the value of the month or setting it to the selected value
 		if ($month==null || $month=='null') {
 			if ($this->session->userdata('filter_month')==null || $this->session->userdata('filter_month')=='null') {
-				
+				$month = '';
 			}else {
 				$month = $this->session->userdata('filter_month');
 			}
@@ -477,6 +532,7 @@ class Sum_model extends MY_Model
 
 			$information = $this->req('https://api.nascop.org/vl/ver1.0/partner?partnerId='  . $partner . '&aggregationPeriod=[' . $param . ']');
 
+
 		} 
 		if(!$partner){
 			if ($county==null || $county=='null') {
@@ -484,8 +540,16 @@ class Sum_model extends MY_Model
 				$information = $this->req('https://api.nascop.org/vl/ver1.0/national?aggregationPeriod=[' . $param . ']');
 			} 
 			else {
-				$information = $this->req('https://api.nascop.org/vl/ver1.0/county?dhisCode=' . $county . '&aggregationPeriod=[' . $param . ']');
+				$information = $this->req('https://api.nascop.org/vl/ver1.0/county?mflCode=' . $county . '&aggregationPeriod=[' . $param . ']');
 			}
+		}
+
+		$result;
+		if($county || $partner){
+			$result = $information['data'][0]['Period'];
+		}
+		else{
+			$result = $information['data']['Period'];
 		}
 
 		
@@ -520,7 +584,7 @@ class Sum_model extends MY_Model
 
 		$count = 0;
 
-		foreach ($information['data']['Period'] as $value) {
+		foreach ($result as $value) {
 			$result = $value['Results']['TotalByAge'];
 			$data["ageGnd"][0]["data"][1] += $result['NonSuppressedBelowAge2'];
 			$data["ageGnd"][0]["data"][2] += $result['NonSuppressedBelowAge10'];
@@ -585,24 +649,47 @@ class Sum_model extends MY_Model
 		}
 		if ($month==null || $month=='null') {
 			if ($this->session->userdata('filter_month')==null || $this->session->userdata('filter_month')=='null') {
-				$month = $this->session->userdata('filter_month');
+				$month = '';
 			}else {
-				$month = 0;
+				$month = $this->session->userdata('filter_month');
 			}
 		}
 
+		// if ($partner) {
+		// 	$sql = "CALL `proc_get_partner_age`('".$partner."','".$year."','".$month."')";
+		// } else {
+		// 	if ($county==null || $county=='null') {
+		// 		$sql = "CALL `proc_get_national_age`('".$year."','".$month."')";
+		// 	} else {
+		// 		$sql = "CALL `proc_get_regional_age`('".$county."','".$year."','".$month."')";
+		// 	}
+		// }
+		// $result = $this->db->query($sql)->result_array();
+
+		$param = $this->set_period_param($year, $month);
+
+		$information;
+		$periods;
+
 		if ($partner) {
-			$sql = "CALL `proc_get_partner_age`('".$partner."','".$year."','".$month."')";
-		} else {
+
+			$information = $this->req('https://api.nascop.org/vl/ver1.0/partner?partnerId='  . $partner . '&aggregationPeriod=[' . $param . ']');
+			$periods = $information['data'][0]['Period'];
+
+		} 
+		else{
 			if ($county==null || $county=='null') {
-				$sql = "CALL `proc_get_national_age`('".$year."','".$month."')";
-			} else {
-				$sql = "CALL `proc_get_regional_age`('".$county."','".$year."','".$month."')";
+				$information = $this->req('https://api.nascop.org/vl/ver1.0/national?aggregationPeriod=[' . $param . ']');
+				$periods = $information['data']['Period'];
+			} 
+			else {
+				$information = $this->req('https://api.nascop.org/vl/ver1.0/county?mflCode=' . $county . '&aggregationPeriod=[' . $param . ']');
+				$periods = $information['data'][0]['Period'];
 			}
 		}
-		// echo "<pre>";print_r($sql);die();
-		$result = $this->db->query($sql)->result_array();
-		// echo "<pre>";print_r($result);die();
+
+		
+		//echo "<pre>";print_r($information);die();
 
 		$data['children']['name'] = 'Tests';
 		$data['children']['colorByPoint'] = true;
@@ -615,24 +702,63 @@ class Sum_model extends MY_Model
 		$schildren = 0;
 		$count = 0;
 
-		foreach ($result as $key => $value) {
-			
-			if ($value['name']=='Less 2' || $value['name']=='2-9' || $value['name']=='10-14') {
-				$data['ul']['children'] = '';
-				$children = (int) $children + (int) $value['agegroups'];
-				$schildren = (int) $schildren + (int) $value['suppressed'];
-				$data['children']['data'][$key]['y'] = $count;
-				$data['children']['data'][$key]['name'] = $value['name'];
-				$data['children']['data'][$key]['y'] = (int) $value['agegroups'];
+		$data['children']['data'][0]['y'] = 0;
+		$data['children']['data'][1]['y'] = 0;
+		$data['children']['data'][2]['y'] = 0;
 
-			} else if ($value['name']=='15-19' || $value['name']=='20-24' || $value['name']=='25+') {
-				$data['ul']['adults'] = '';
-				$adults = (int) $adults + (int) $value['agegroups'];
-				$sadult = (int) $sadult + (int) $value['suppressed'];
-				$data['adults']['data'][$key]['y'] = $count;
-				$data['adults']['data'][$key]['name'] = $value['name'];
-				$data['adults']['data'][$key]['y'] = (int) $value['agegroups'];
-			}
+		$data['adults']['data'][0]['y'] = 0;
+		$data['adults']['data'][1]['y'] = 0;
+
+		// foreach ($result as $key => $value) {
+			
+		// 	if ($value['name']=='Less 2' || $value['name']=='2-9' || $value['name']=='10-14') {
+		// 		$data['ul']['children'] = '';
+		// 		$children = (int) $children + (int) $value['agegroups'];
+		// 		$schildren = (int) $schildren + (int) $value['suppressed'];
+		// 		$data['children']['data'][$key]['y'] = $count;
+		// 		$data['children']['data'][$key]['name'] = $value['name'];
+		// 		$data['children']['data'][$key]['y'] = (int) $value['agegroups'];
+
+		// 	} else if ($value['name']=='15-19' || $value['name']=='20-24' || $value['name']=='25+') {
+		// 		$data['ul']['adults'] = '';
+		// 		$adults = (int) $adults + (int) $value['agegroups'];
+		// 		$sadult = (int) $sadult + (int) $value['suppressed'];
+		// 		$data['adults']['data'][$key]['y'] = $count;
+		// 		$data['adults']['data'][$key]['name'] = $value['name'];
+		// 		$data['adults']['data'][$key]['y'] = (int) $value['agegroups'];
+		// 	}
+		// }
+
+		foreach ($periods as $key => $value) {
+			$result = $value['Results']['TotalByAge'];
+
+			$data['children']['data'][0]['name'] = 'Less 2';
+			$data['children']['data'][0]['y'] += (int) $result['NonSuppressedBelowAge2'] + (int) $result['SupressedBelowAge2'];
+			$data['children']['data'][1]['name'] = '2-9';
+			$data['children']['data'][1]['y'] += (int) $result['NonSuppressedBelowAge10'] + (int) $result['SupressedBelowAge10'];
+			$data['children']['data'][2]['name'] = '10-14';
+			$data['children']['data'][2]['y'] += (int) $result['NonSuppressedBelowAge15'] + (int) $result['SupressedBelowAge15'];
+
+			$schildren_ = (int) $result['SupressedBelowAge2'] + (int) $result['SupressedBelowAge10'] + (int) $result['SupressedBelowAge15'];
+
+			$children_ = $schildren_ + (int) $result['NonSuppressedBelowAge2'] + (int) $result['NonSuppressedBelowAge10'] + (int) $result['NonSuppressedBelowAge15'];
+
+			$schildren += $schildren_;
+			$children += $children_;
+
+
+			$data['adults']['data'][0]['name'] = '15-19';
+			$data['adults']['data'][0]['y'] += (int) $result['NonSuppressedBelowAge20'] + (int) $result['SupressedBelowAge20'];
+			$data['adults']['data'][1]['name'] = '25+';
+			$data['adults']['data'][1]['y'] += (int) $result['NonSuppressedAboveAge25'] + (int) $result['SupressedAboveAge25'];
+
+			$sadult_ = (int) $result['SupressedAboveAge25'] + (int) $result['SupressedBelowAge20'];
+			$adult_ = $sadult_ + (int) $result['NonSuppressedBelowAge20'] + (int) $result['NonSuppressedAboveAge25'];
+
+			$sadult += $sadult_;
+			$adults += $adult_;
+
+
 		}
 		// echo "<pre>";print_r($schildren);echo "</pre>";
 		// echo "<pre>";print_r($data);
@@ -709,6 +835,7 @@ class Sum_model extends MY_Model
 		return $data;
 	}
 
+	// Not Possible Any More
 	function sample_types($year=null,$county=null,$partner=null)
 	{
 		$array1 = array();
@@ -741,15 +868,22 @@ class Sum_model extends MY_Model
 				$information2 = $this->req('https://api.nascop.org/vl/ver1.0/national?aggregationPeriod=[' . $to . ']');
 			} 
 			else {
-				$information = $this->req('https://api.nascop.org/vl/ver1.0/county?dhisCode=' . $county . '&aggregationPeriod=[' . $from . ']');
-				$information2 = $this->req('https://api.nascop.org/vl/ver1.0/county?dhisCode=' . $county . '&aggregationPeriod=[' . $to . ']');
+				$information = $this->req('https://api.nascop.org/vl/ver1.0/county?mflCode=' . $county . '&aggregationPeriod=[' . $from . ']');
+				$information2 = $this->req('https://api.nascop.org/vl/ver1.0/county?mflCode=' . $county . '&aggregationPeriod=[' . $to . ']');
 			}
 		}
+
+		//echo "<pre>";print_r($information);die();
 		
-
-
-		$result = array_merge($information['data']['Period'], $information2['data']['Period']);
-		// echo "<pre>";print_r($result);die();
+		$result;
+		if($county || $partner){
+			$result = array_merge($information['data'][0]['Period'], $information2['data'][0]['Period']);
+		}
+		else{
+			$result = array_merge($information['data']['Period'], $information2['data']['Period']);
+		}
+		
+		//echo "<pre>";print_r($result);die();
 		$data['sample_types'][0]['name'] = 'EDTA';
 		$data['sample_types'][1]['name'] = 'DBS';
 		$data['sample_types'][2]['name'] = 'Plasma';
@@ -762,7 +896,7 @@ class Sum_model extends MY_Model
 		$data["sample_types"][2]["data"][0]	= $count;
 
 		foreach ($result as $key => $value) {
-			$period = $value->period;
+			$period = $value['period'];
 			$times = str_split($period, 4);
 			
 			$data['categories'][$key] = $this->resolve_month((int)$times[1]).'-'.$times[0];
@@ -773,6 +907,105 @@ class Sum_model extends MY_Model
 			
 		}
 		//echo "<pre>";print_r($data);die();
+		return $data;
+	}
+
+	function get_county_outcomes($param){
+		$data['county_outcomes'][0]['name'] = 'Not Suppresed';
+		$data['county_outcomes'][1]['name'] = 'Suppresed';
+
+		$county_data = $this->req('https://api.nascop.org/vl/ver1.0/admin/county');
+		$size = count($county_data['data']);
+		//echo "<pre>";print_r($size);echo "</pre>";die();
+		$data["county_outcomes"][0]["data"] = array_fill(0, $size, 0);
+		$data["county_outcomes"][1]["data"] = array_fill(0, $size, 0);
+
+		foreach ($county_data['data'] as $key => $value) {
+
+			$information = $this->req('https://api.nascop.org/vl/ver1.0/county?mflCode=' . $value['CountyMFLCode'] . '&aggregationPeriod=[' . $param . ']');
+
+			$data['categories'][$key] = $value['CountyName'];
+
+			foreach ($information['data'][0]['Period'] as $key2 => $value2) {
+				$data["county_outcomes"][0]["data"][$key] += $value2['TestsDone']['NonSuppressed'];
+				$data["county_outcomes"][1]["data"][$key] += $value2['TestsDone']['Suppressed'];
+
+				// echo "<pre>";print_r($data);echo "</pre>";die();
+			}
+		}
+		// echo "<pre>";print_r($data);echo "</pre>";die();
+		return $data;
+	}
+
+	function get_partners_outcomes($param){
+		$data['county_outcomes'][0]['name'] = 'Not Suppresed';
+		$data['county_outcomes'][1]['name'] = 'Suppresed';
+
+		$partner_data = $this->req('https://api.nascop.org/vl/ver1.0/admin/partner');
+		$size = count($partner_data['data']) - 1;
+
+		$data["county_outcomes"][0]["data"] = array_fill(0, $size, 0);
+		$data["county_outcomes"][1]["data"] = array_fill(0, $size, 0);
+
+		$count = 0;
+
+		foreach ($partner_data['data'] as $key => $value) {
+
+			if($value['PartnerId'] != 0){
+				$information = $this->req('https://api.nascop.org/vl/ver1.0/partner?partnerId='  . $value['PartnerId'] . '&aggregationPeriod=[' . $param . ']');
+
+				//echo "<pre>";print_r($information);echo "</pre>";die();
+			
+				$data['categories'][$count] = $value['PartnerName'];
+
+				foreach ($information['data'][0]['Period'] as $key2 => $value2) {
+					$data["county_outcomes"][0]["data"][$count] += $value2['TestsDone']['NonSuppressed'];
+					$data["county_outcomes"][1]["data"][$count] += $value2['TestsDone']['Suppressed'];
+
+					// echo "<pre>";print_r($data);echo "</pre>";die();
+				}
+				$count++;
+			}
+
+		}
+		//echo "<pre>";print_r($data);echo "</pre>";die();
+		return $data;
+	}
+
+	function get_partner_sites_outcomes($param, $partner){
+		$data['county_outcomes'][0]['name'] = 'Not Suppresed';
+		$data['county_outcomes'][1]['name'] = 'Suppresed';
+
+		$partner_data = $this->req('https://api.nascop.org/vl/ver1.0/admin/partner');
+		//echo "<pre>";print_r($partner_data);echo "</pre>";die();
+		
+		$information = $this->req('https://api.nascop.org/vl/ver1.0/partner?partnerId='  . $partner . '&aggregationPeriod=[201601]');
+
+		$supported = $information['data'][0]['ListOfSupportedFacilities'];
+
+		$size = count($supported);
+
+		$data["county_outcomes"][0]["data"] = array_fill(0, $size, 0);
+		$data["county_outcomes"][1]["data"] = array_fill(0, $size, 0);
+
+		foreach($supported as $key => $value){
+			$site = $this->req('https://api.nascop.org/vl/ver1.0/facility?mflCode=' .  $value['MFLCode'] .'&aggregationPeriod=['. $param . ']');
+			// $dropdown .= '<option value="'.$value['MFLCode'].'">'.
+			// $site['data'][0]['FacilityName'].'</option>';
+
+			//echo "<pre>";print_r($site);echo "</pre>";die();
+
+			// $data['categories'][$key] = $site['data'][0]['FacilityName'];
+			$data['categories'][$key] = $value['MFLCode'];
+
+			foreach ($site['data'][0]['Period'] as $key2 => $value2) {
+				$data["county_outcomes"][0]["data"][$key] += $value2['TestsDone']['NonSuppressed'];
+				$data["county_outcomes"][1]["data"][$key] += $value2['TestsDone']['Suppressed'];
+			}
+
+		}
+
+		
 		return $data;
 	}
 

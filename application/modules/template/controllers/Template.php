@@ -116,5 +116,10 @@ class Template extends MY_Controller
 					'month' => $this->session->userdata('filter_month'));
 		echo json_encode($data);
 	}
+
+	function check_counties(){
+		$this->load->model('template_model');
+		echo $this->template_model->get_counties_dropdown();
+	}
 }
 ?>

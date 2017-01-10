@@ -14,15 +14,14 @@ class Trendapi_model extends MY_Model
 
 	function yearly_trends($county=NULL){
 
-		if($county == NULL || $county == 48){
-			$county = 0;
-		}
 		$url;
+		$b = true;
 
-		if ($county == 0) {
+		if ($county == NULL || $county == 0) {
 			$url = 'https://api.nascop.org/vl/ver1.0/national?aggregationPeriod=[';
 		} else {
-			$url = 'https://api.nascop.org/vl/ver1.0/county?mflCode=40&dhisCode=wsBsC6gjHvn&aggregationPeriod=[';
+			$url = 'https://api.nascop.org/vl/ver1.0/county?mflCode=' . $county . '&aggregationPeriod=[';
+			$b = false;
 		}
 
 		$year = 2012;
@@ -39,7 +38,14 @@ class Trendapi_model extends MY_Model
 			$data['rejected_trends'][$i]['name'] = $year;
 			$data['tat_trends'][$i]['name'] = $year;
 
-			$extract = $info['data']['Period'];
+			$extract;
+
+			if($b){
+				$extract = $info['data']['Period'];
+			}
+			else{
+				$extract = $info['data'][0]['Period'];
+			}
 
 			$month=0;
 
@@ -53,21 +59,21 @@ class Trendapi_model extends MY_Model
 			$year++;
 			$i++;
 		}
+		echo "<pre>";print_r($data);echo "</pre>";die();
 
 		return $data;
 	}
 
 	function yearly_summary($county=NULL){
 
-		if($county == NULL || $county == 48){
-			$county = 0;
-		}
 		$url;
+		$b = true;
 
-		if ($county == 0) {
+		if ($county == NULL || $county == 0) {
 			$url = 'https://api.nascop.org/vl/ver1.0/national?aggregationPeriod=[';
 		} else {
-			$url = 'https://api.nascop.org/vl/ver1.0/county?mflCode=40&dhisCode=wsBsC6gjHvn&aggregationPeriod=[';
+			$url = 'https://api.nascop.org/vl/ver1.0/county?mflCode=' . $county . '&aggregationPeriod=[';
+			$b = false;
 		}
 
 		$year = 2012;
@@ -98,7 +104,14 @@ class Trendapi_model extends MY_Model
 
 			$data['categories'][$i] = $year;
 
-			$extract = $info['data']['Period'];
+			$extract;
+
+			if($b){
+				$extract = $info['data']['Period'];
+			}
+			else{
+				$extract = $info['data'][0]['Period'];
+			}
 			
 			$data['outcomes'][0]['data'][$i] = 0;
 			$data['outcomes'][1]['data'][$i] = 0;
@@ -114,27 +127,6 @@ class Trendapi_model extends MY_Model
 			$year++;
 			$i++;
 		}
-
-		return $data;
-
-
-		
-		
-		// echo "<pre>";print_r($result);die();
-		$year = date("Y");
-		$i = 0;
-
-		
-
-		foreach ($result as $key => $value) {
-			$data['categories'][$i] = $value['year'];
-			
-			$data['outcomes'][0]['data'][$i] = (int) $value['nonsuppressed'];
-			$data['outcomes'][1]['data'][$i] = (int) $value['suppressed'];
-			$data['outcomes'][2]['data'][$i] = round(@(((int) $value['suppressed']*100)/((int) $value['suppressed']+(int) $value['nonsuppressed'])),1);
-			$i++;
-		}
-		
 
 		return $data;
 	}

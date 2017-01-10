@@ -14,15 +14,14 @@ class Partner_trend_api_model extends MY_Model
 
 	function yearly_trends($partner=NULL){
 
-		if($partner == NULL || $partner == 'NA'){
-			$partner = 0;
-		}
 		$url;
+		$b = true;
 
-		if ($partner == 0) {
+		if ($partner == 0 || $partner == NULL || $partner == 'null') {
 			$url = 'https://api.nascop.org/vl/ver1.0/national?aggregationPeriod=[';
 		} else {
-			$url = 'https://api.nascop.org/vl/ver1.0/partner?partnerId=1&aggregationPeriod=[';
+			$url = 'https://api.nascop.org/vl/ver1.0/partner?partnerId=' . $partner . '&aggregationPeriod=[';
+			$b = false;
 		}
 
 		$year = 2012;
@@ -39,7 +38,14 @@ class Partner_trend_api_model extends MY_Model
 			$data['rejected_trends'][$i]['name'] = $year;
 			$data['tat_trends'][$i]['name'] = $year;
 
-			$extract = $info['data']['Period'];
+			$extract;
+
+			if($b){
+				$extract = $info['data']['Period'];
+			}
+			else{
+				$extract = $info['data'][0]['Period'];
+			}
 
 			$month=0;
 
@@ -57,17 +63,16 @@ class Partner_trend_api_model extends MY_Model
 		return $data;
 	}
 
-	function yearly_summary($county=NULL){
-
-		if($county == NULL || $county == 48){
-			$county = 0;
-		}
+	function yearly_summary($partner=NULL){
+		
 		$url;
+		$b=true;
 
-		if ($county == 0) {
+		if ($partner == 0 || $partner == NULL || $partner == 'null') {
 			$url = 'https://api.nascop.org/vl/ver1.0/national?aggregationPeriod=[';
 		} else {
-			$url = 'https://api.nascop.org/vl/ver1.0/partner?partnerId=1&aggregationPeriod=[';
+			$url = 'https://api.nascop.org/vl/ver1.0/partner?partnerId=' . $partner . '&aggregationPeriod=[';
+			$b=false;
 		}
 
 		$year = 2012;
@@ -98,7 +103,14 @@ class Partner_trend_api_model extends MY_Model
 
 			$data['categories'][$i] = $year;
 
-			$extract = $info['data']['Period'];
+			$extract;
+
+			if($b){
+				$extract = $info['data']['Period'];
+			}
+			else{
+				$extract = $info['data'][0]['Period'];
+			}
 
 			$data['outcomes'][0]['data'][$i] = 0;
 			$data['outcomes'][1]['data'][$i] = 0;
