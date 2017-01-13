@@ -6,6 +6,21 @@ defined("BASEPATH") or exit("No direct script access allowed!");
 */
 class Labs_model extends MY_Model
 {
+	function set_period_param($year, $month){
+		$param = '';
+		$param .= $year;
+
+		if($month){
+			if($month < 10){
+				$param .= '0' . $month;
+			}
+			else{
+				$param .= $month;
+			}
+		}
+		return $param;		
+	}
+
 	function _fetch_api_lab_data($year=NULL,$month=NULL)
 	{
 		if ($year==null || $year=='null') {
@@ -13,13 +28,13 @@ class Labs_model extends MY_Model
 		}
 		if ($month==null || $month=='null') {
 			if ($this->session->userdata('filter_month')==null || $this->session->userdata('filter_month')=='null') {
-				$month = $this->session->userdata('filter_month');
+				$month = '';
 			}else {
-				$month = NULL;
+				$month = $this->session->userdata('filter_month');
 			}
 		}
-
-		$link = 'https://api.nascop.org/vl/ver1.0/laboratory?aggregationPeriod=['.$year.$month.']';
+		$param = $this->set_period_param($year, $month);
+		$link = 'https://api.nascop.org/vl/ver1.0/laboratory?aggregationPeriod=['.$param.']';
 		// echo $link;
 		$result = $this->req($link);
 		// $extraction = array();
@@ -170,7 +185,7 @@ class Labs_model extends MY_Model
 		}
 
 		$result = $this->_fetch_api_lab_data($year,$month);
-		// echo "<pre>";print_r($result);die();
+		//echo "<pre>";print_r($result);die();
 		$extraction = array();
 		foreach ($result as $value) {
 			foreach ($value as $key1 => $value1) {

@@ -57,14 +57,24 @@ class Template_model extends MY_Model
 		// 	$dropdown .= '<option value="'.$value['ID'].'">'.$value['name'].'</option>';
 		// }
 
-		$partner_data = $this->req('https://api.nascop.org/vl/ver1.0/admin/partner');
+		// $partner_data = $this->req('https://api.nascop.org/vl/ver1.0/admin/partner');
 
-		foreach ($partner_data['data'] as $key => $value) {
-			$info = $this->req('https://api.nascop.org/vl/ver1.0/partner?partnerId='  . $value['PartnerId'] . '&aggregationPeriod=[201601]');
-			foreach($info['data'][0]['ListOfSupportedFacilities'] as $key2 => $value2){
-				$site = $this->req('https://api.nascop.org/vl/ver1.0/facility?mflCode=' .  $value2['MFLCode'] .'&aggregationPeriod=[201601]');
-				$dropdown .= '<option value="'.$value2['MFLCode'].'">'.
-				$site['data']['FacilityName'].'</option>';
+		// foreach ($partner_data['data'] as $key => $value) {
+		// 	$info = $this->req('https://api.nascop.org/vl/ver1.0/partner?partnerId='  . $value['PartnerId'] . '&aggregationPeriod=[201601]');
+		// 	foreach($info['data'][0]['ListOfSupportedFacilities'] as $key2 => $value2){
+		// 		$site = $this->req('https://api.nascop.org/vl/ver1.0/facility?mflCode=' .  $value2['MFLCode'] .'&aggregationPeriod=[201601]');
+		// 		$dropdown .= '<option value="'.$value2['MFLCode'].'">'.
+		// 		$site['data']['FacilityName'].'</option>';
+		// 	}
+		// }
+
+		$county_data = $this->req('https://api.nascop.org/vl/ver1.0/admin/county');
+
+		foreach ($county_data['data'] as $key => $value) {
+			$info = $this->req('https://api.nascop.org/vl/ver1.0/TopFacilities?entity=county&mflCode=' . $value['CountyMFLCode'] . '&aggregationPeriod=[201601]');
+			foreach ($info['data'] as $key2 => $value2) {
+				$dropdown .= '<option value="'.$value2['code'].'">'.
+				$value2['name'].'</option>';
 			}
 		}
 

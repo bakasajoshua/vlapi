@@ -21,9 +21,11 @@ class Labs extends MY_Controller
 	function testing_trends($year=NULL)
 	{
 		$data['trends'] = $this->labs_model->lab_testing_trends($year);
+		echo "<pre>";print_r($data);die();
 
 		$this->load->view('labs_testing_trends',$data);
 	}
+
 
 	function rejection_trends($year=NULL)
 	{

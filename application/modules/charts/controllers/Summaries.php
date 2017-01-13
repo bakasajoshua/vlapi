@@ -13,75 +13,64 @@ class Summaries extends MY_Controller {
 	{
 		$data['outcomes'] = $this->sum_model->turnaroundtime($year,$month,$county);
 
-		//echo "<pre>";print_r($data);die();
-		echo json_encode($data);
 
-		//$this->load->view('turnaroundtime_view',$data);
+		$this->load->view('turnaroundtime_view',$data);
 	}
 	
 	function county_outcomes($year=NULL,$month=NULL,$pfil=NULL,$partner=NULL,$county=NULL)
 	{
 		$data['outcomes'] = $this->sum_model->county_outcomes($year,$month,$pfil,$partner,$county);
-		echo json_encode($data);
 
-    	// $this->load->view('county_outcomes_view',$data);
+    	$this->load->view('county_outcomes_view',$data);
 	}
 
 	function vl_outcomes($year=NULL,$month=NULL,$county=NULL,$partner=NULL)
 	{
 		$data['outcomes'] = $this->sum_model->vl_outcomes($year,$month,$county,$partner);
 
-		echo json_encode($data);
-    	//$this->load->view('vl_outcomes_view',$data);
+    	$this->load->view('vl_outcomes_view',$data);
 	}
 
 	function justification($year=NULL,$month=NULL,$county=NULL,$partner=NULL)
 	{
 		$data['outcomes'] = $this->sum_model->justification($year,$month,$county,$partner);
-		echo json_encode($data);
 
-    	//$this->load->view('justification_view',$data);
+    	$this->load->view('justification_view',$data);
 	}
 
 	function justificationbreakdown($year=NULL,$month=NULL,$county=NULL,$partner=NULL)
 	{
 		$data['outcomes'] = $this->sum_model->justification_breakdown($year,$month,$county,$partner);
-		echo json_encode($data);
 		
-		//$this->load->view('justification_breakdown_view',$data);
+		$this->load->view('justification_breakdown_view',$data);
 	}
 
 	function age($year=NULL,$month=NULL,$county=NULL,$partner=NULL)
 	{
 		$data['outcomes'] = $this->sum_model->age($year,$month,$county,$partner);
 		
-		echo json_encode($data);
-    	//$this->load->view('agegroup_view',$data);
+    	$this->load->view('agegroup_view',$data);
 	}
 
 	function agebreakdown($year=NULL,$month=NULL,$county=NULL,$partner=NULL)
 	{
 		$data['outcomes'] = $this->sum_model->age_breakdown($year,$month,$county,$partner);
-		echo json_encode($data);
 		
-		//$this->load->view('agegroupBreakdown',$data);
+		$this->load->view('agegroupBreakdown',$data);
 	}
 
 	function gender($year=NULL,$month=NULL,$county=NULL,$partner=NULL)
 	{
 		$data['outcomes'] = $this->sum_model->gender($year,$month,$county,$partner);
-		echo json_encode($data);
-
-    	//$this->load->view('gender_view',$data);
+		
+    	$this->load->view('gender_view',$data);
 	}
 
 	function sample_types($year=NULL,$county=NULL,$partner=NULL)
 	{
 		$data['outcomes'] = $this->sum_model->sample_types($year,$county,$partner);
 
-		echo json_encode($data);
-
-    	//$this->load->view('sample_types_view',$data);
+    	$this->load->view('sample_types_view',$data);
 	}
 
 	function display_date()

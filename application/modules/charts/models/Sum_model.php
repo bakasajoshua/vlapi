@@ -64,7 +64,7 @@ class Sum_model extends MY_Model
 		$data['tat3'] = round((int) $data['tat3'] / $count) + $data['tat2'];
 		$data['tat4'] = round((int) $data['tat4'] / $count);
 		
-		echo "<pre>";print_r($data);die();
+		//echo "<pre>";print_r($data);die();
 		return $data;
 	}
 
@@ -101,74 +101,23 @@ class Sum_model extends MY_Model
 				
 		// echo "PFil: ".$pfil." --Partner: ".$partner." -- County: ".$county;
 		if ($county) {
-			$sql = "CALL `proc_get_county_sites_outcomes`('".$county."','".$year."','".$month."')";
+			// $sql = "CALL `proc_get_county_sites_outcomes`('".$county."','".$year."','".$month."')";
+			$data = $this->get_county_sites_outcomes($param, $county);
 		} else {
 			if ($pfil==1) {
 				if ($partner) {
 					// $sql = "CALL `proc_get_partner_sites_outcomes`('".$partner."','".$year."','".$month."')";
 					$data = $this->get_partner_sites_outcomes($param, $partner);
-					echo "<pre>";print_r($data);echo "</pre>";die();
 				} else {
 					// $sql = "CALL `proc_get_partner_outcomes`('".$year."','".$month."')";
 					$data = $this->get_partners_outcomes($param);
-					echo "<pre>";print_r($data);echo "</pre>";die();
 				}
 				
 			} else {
-				// $sql = "CALL `proc_get_county_outcomes`('".$year."','".$month."')";
-				// $county_data = $this->req('https://api.nascop.org/vl/ver1.0/admin/county');
-				// //echo "<pre>";print_r($county_data);echo "</pre>";die();
-				// $data["county_outcomes"][0]["data"] = array_fill(0, 47, 0);
-				// $data["county_outcomes"][1]["data"] = array_fill(0, 47, 0);
-
-				// foreach ($county_data['data'] as $key => $value) {
-
-				// 	$information = $this->req('https://api.nascop.org/vl/ver1.0/county?mflCode=' . $value['CountyMFLCode'] . '&aggregationPeriod=[' . $param . ']');
-
-				// 	$data['categories'][$key] = $value['CountyName'];
-
-				// 	foreach ($information['data'][0]['Period'] as $key2 => $value2) {
-				// 		$data["county_outcomes"][0]["data"][$key] += $value2['TestsDone']['NonSuppressed'];
-				// 		$data["county_outcomes"][1]["data"][$key] += $value2['TestsDone']['Suppressed'];
-
-				// 		// echo "<pre>";print_r($data);echo "</pre>";die();
-				// 	}
-				// }
 				$data = $this->get_county_outcomes($param);
-				echo "<pre>";print_r($data);echo "</pre>";die();
 			}
 		}
-		//echo "<pre>";print_r($sql);echo "</pre>";die();
-		//$result = $this->db->query($sql)->result_array();
-		// echo "<pre>";print_r($result);die();
-
-		
-
-		
-
-		// $result;
-		// if($county || $partner){
-		// 	$result = $information['data'][0]['Period'];
-		// }
-		// else{
-		// 	$result = $information['data']['Period'];
-		// }
-
-		$data['county_outcomes'][0]['name'] = 'Not Suppresed';
-		$data['county_outcomes'][1]['name'] = 'Suppresed';
-
-		$count = 0;
-		
-		$data["county_outcomes"][0]["data"][0]	= $count;
-		$data["county_outcomes"][1]["data"][0]	= $count;
-		$data['categories'][0]					= 'No Data';
-
-		foreach ($result as $key => $value) {
-			$data['categories'][$key] 					= $value['name'];
-			$data["county_outcomes"][0]["data"][$key]	=  (int) $value['nonsuppressed'];
-			$data["county_outcomes"][1]["data"][$key]	=  (int) $value['suppressed'];
-		}
-		echo "<pre>";print_r($data);die();
+		// echo "<pre>";print_r($data);die();
 		return $data;
 	}
 
@@ -244,18 +193,30 @@ class Sum_model extends MY_Model
 		$data['vl_outcomes']['data'][0]['y'] = 0;
 		$data['vl_outcomes']['data'][1]['y'] = 0;
 
+		$rejected = 0;
+		$ctf = 0;
+		$tests = 0;
+		$tr = 0;
+
 		foreach ($result as $key => $value) {
 			$data['vl_outcomes']['data'][0]['y'] += $value['TestsDone']['Suppressed'];
 			$data['vl_outcomes']['data'][1]['y'] += $value['TestsDone']['NonSuppressed'];
+
+			$rejected += $value['TestsDone']['Rejected'];
+			$ctf += $value['TestsDone']['ConfirmedTreatmentFailure'];
+			$tests += $value['TestsDone']['TotalTests'];
+			$tr += $value['TestsDone']['TotalRepeatSamples'];
 		}
 
 		$greater = $data['vl_outcomes']['data'][1]['y'];
 		$less = $data['vl_outcomes']['data'][0]['y'];
-		$total = $greater + $total;
+		$total = $greater + $less;
+
+		
 
 		$data['ul'] .= '<tr>
 	    		<td colspan="2">Cumulative Tests (All Samples Run):</td>
-	    		<td colspan="2">'.number_format($value['alltests']).'</td>
+	    		<td colspan="2">'.number_format($tests).'</td>
 	    	</tr>
 	    	<tr>
 	    		<td colspan="2">&nbsp;&nbsp;&nbsp;Tests With Valid Outcomes:</td>
@@ -283,21 +244,18 @@ class Sum_model extends MY_Model
 	    		<td></td>
 	    	</tr>
 
-	    	<tr>
-	    		<td>Confirmatory Repeat Tests:</td>
-	    		<td>'.number_format($value['confirmtx']).'</td>
-	    		<td>Non Suppression ( &gt; 1000cpml)</td>
-	    		<td>'.number_format($value['confirm2vl']). ' (' .round(($value['confirm2vl'] * 100 / $value['confirmtx']), 2). '%)' .'</td>
-	    	</tr>
+	    	
 
 	    	<tr>
 	    		<td>Rejected Samples:</td>
-	    		<td>'.number_format($value['rejected']).'</td>
+	    		<td>'.number_format($rejected).'</td>
 	    		<td>Percentage Rejection Rate</td>
-	    		<td>'. round((($value['rejected']*100)/$value['received']), 2, PHP_ROUND_HALF_UP).'%</td>
+	    		<td>'. round((($rejected*100)/$total), 2, PHP_ROUND_HALF_UP).'%</td>
 	    	</tr>';
 
-		echo "<pre>";print_r($data);die();
+
+
+		//echo "<pre>";print_r($data);die();
 		return $data;
 	}
 
@@ -397,21 +355,9 @@ class Sum_model extends MY_Model
 
 		}
 
-		// $data['justification']['data'][0]['y'] = round($data['justification']['data'][0]['y'] / $count);
-		// $data['justification']['data'][1]['y'] = round($data['justification']['data'][1]['y'] / $count);
-		// $data['justification']['data'][2]['y'] = round($data['justification']['data'][2]['y'] / $count);
-		// $data['justification']['data'][3]['y'] = round($data['justification']['data'][3]['y'] / $count);
-		// $data['justification']['data'][4]['y'] = round($data['justification']['data'][4]['y'] / $count);
-		// $data['justification']['data'][5]['y'] = round($data['justification']['data'][5]['y'] / $count);
-		// $data['justification']['data'][6]['y'] = round($data['justification']['data'][6]['y'] / $count); 
-		// $data['justification']['data'][7]['y'] = round($data['justification']['data'][7]['y'] / $count);
-		// $data['justification']['data'][8]['y'] = round($data['justification']['data'][8]['y'] / $count);
-
-		
-
 		$data['justification']['data'][1]['sliced'] = true;
 		$data['justification']['data'][1]['selected'] = true;
-		echo "<pre>";print_r($data);die();
+		//echo "<pre>";print_r($data);die();
 		return $data;
 	}
 
@@ -492,7 +438,7 @@ class Sum_model extends MY_Model
 		
 		$data['just_breakdown'][0]['drilldown']['color'] = '#913D88';
 		$data['just_breakdown'][1]['drilldown']['color'] = '#96281B';
-		echo "<pre>";print_r($data);die();
+		//echo "<pre>";print_r($data);die();
 		return $data;
 	}
 
@@ -604,26 +550,7 @@ class Sum_model extends MY_Model
 			
 			$count++;
 		}
-		//die();
-
-		// $data["ageGnd"][0]["data"][1] = round($data["ageGnd"][0]["data"][1] / $count);
-		// $data["ageGnd"][0]["data"][2] = round($data["ageGnd"][0]["data"][2] / $count);
-		// $data["ageGnd"][0]["data"][3] = round($data["ageGnd"][0]["data"][3] / $count);
-		// $data["ageGnd"][0]["data"][4] = round($data["ageGnd"][0]["data"][4] / $count);
-		// $data["ageGnd"][0]["data"][5] = round($data["ageGnd"][0]["data"][5] / $count);
-		// $data["ageGnd"][0]["data"][6] = round($data["ageGnd"][0]["data"][6] / $count);
-
-		// $data["ageGnd"][1]["data"][1] = round($data["ageGnd"][1]["data"][1] / $count);
-		// $data["ageGnd"][1]["data"][2] = round($data["ageGnd"][1]["data"][2] / $count);
-		// $data["ageGnd"][1]["data"][3] = round($data["ageGnd"][1]["data"][3] / $count);
-		// $data["ageGnd"][1]["data"][4] = round($data["ageGnd"][1]["data"][4] / $count);
-		// $data["ageGnd"][1]["data"][5] = round($data["ageGnd"][1]["data"][5] / $count);
-		// $data["ageGnd"][1]["data"][6] = round($data["ageGnd"][1]["data"][6] / $count);
-
 		
-		
-
-		// die();
 		$data['ageGnd'][0]['drilldown']['color'] = '#913D88';
 		$data['ageGnd'][1]['drilldown']['color'] = '#96281B';
 
@@ -631,7 +558,8 @@ class Sum_model extends MY_Model
 		$data['categories'] = array_values($data['categories']);
 		$data["ageGnd"][0]["data"] = array_values($data["ageGnd"][0]["data"]);
 		$data["ageGnd"][1]["data"] = array_values($data["ageGnd"][1]["data"]);
-		echo "<pre>";print_r($data);die();
+
+		// echo "<pre>";print_r($data);die();
 		return $data;
 	}
 
@@ -654,17 +582,6 @@ class Sum_model extends MY_Model
 				$month = $this->session->userdata('filter_month');
 			}
 		}
-
-		// if ($partner) {
-		// 	$sql = "CALL `proc_get_partner_age`('".$partner."','".$year."','".$month."')";
-		// } else {
-		// 	if ($county==null || $county=='null') {
-		// 		$sql = "CALL `proc_get_national_age`('".$year."','".$month."')";
-		// 	} else {
-		// 		$sql = "CALL `proc_get_regional_age`('".$county."','".$year."','".$month."')";
-		// 	}
-		// }
-		// $result = $this->db->query($sql)->result_array();
 
 		$param = $this->set_period_param($year, $month);
 
@@ -708,26 +625,6 @@ class Sum_model extends MY_Model
 
 		$data['adults']['data'][0]['y'] = 0;
 		$data['adults']['data'][1]['y'] = 0;
-
-		// foreach ($result as $key => $value) {
-			
-		// 	if ($value['name']=='Less 2' || $value['name']=='2-9' || $value['name']=='10-14') {
-		// 		$data['ul']['children'] = '';
-		// 		$children = (int) $children + (int) $value['agegroups'];
-		// 		$schildren = (int) $schildren + (int) $value['suppressed'];
-		// 		$data['children']['data'][$key]['y'] = $count;
-		// 		$data['children']['data'][$key]['name'] = $value['name'];
-		// 		$data['children']['data'][$key]['y'] = (int) $value['agegroups'];
-
-		// 	} else if ($value['name']=='15-19' || $value['name']=='20-24' || $value['name']=='25+') {
-		// 		$data['ul']['adults'] = '';
-		// 		$adults = (int) $adults + (int) $value['agegroups'];
-		// 		$sadult = (int) $sadult + (int) $value['suppressed'];
-		// 		$data['adults']['data'][$key]['y'] = $count;
-		// 		$data['adults']['data'][$key]['name'] = $value['name'];
-		// 		$data['adults']['data'][$key]['y'] = (int) $value['agegroups'];
-		// 	}
-		// }
 
 		foreach ($periods as $key => $value) {
 			$result = $value['Results']['TotalByAge'];
@@ -776,7 +673,7 @@ class Sum_model extends MY_Model
 		$data['adults']['data'][0]['sliced'] = true;
 		$data['adults']['data'][0]['selected'] = true;
 
-		echo "<pre>";print_r($data);die();
+		// echo "<pre>";print_r($data);die();
 		
 		return $data;
 	}
@@ -831,14 +728,14 @@ class Sum_model extends MY_Model
 
 		$data['gender'][0]['drilldown']['color'] = '#913D88';
 		$data['gender'][1]['drilldown']['color'] = '#96281B';
-		echo "<pre>";print_r($data);die();
+		// echo "<pre>";print_r($data);die();
 		return $data;
 	}
 
 	// Not Possible Any More
 	function sample_types($year=null,$county=null,$partner=null)
 	{
-		$array1 = array();
+		/*$array1 = array();
 		$array2 = array();
 		$sql2 = NULL;
 
@@ -905,7 +802,8 @@ class Sum_model extends MY_Model
 			$data["sample_types"][1]["data"][$key]	= (int) $value['SampleTypes']['DBS'];
 			$data["sample_types"][2]["data"][$key]	= (int) $value['SampleTypes']['FrozenPlasma'];
 			
-		}
+		}*/
+		$data = '';
 		//echo "<pre>";print_r($data);die();
 		return $data;
 	}
@@ -933,7 +831,7 @@ class Sum_model extends MY_Model
 				// echo "<pre>";print_r($data);echo "</pre>";die();
 			}
 		}
-		// echo "<pre>";print_r($data);echo "</pre>";die();
+		
 		return $data;
 	}
 
@@ -968,7 +866,7 @@ class Sum_model extends MY_Model
 			}
 
 		}
-		//echo "<pre>";print_r($data);echo "</pre>";die();
+		
 		return $data;
 	}
 
@@ -990,12 +888,6 @@ class Sum_model extends MY_Model
 
 		foreach($supported as $key => $value){
 			$site = $this->req('https://api.nascop.org/vl/ver1.0/facility?mflCode=' .  $value['MFLCode'] .'&aggregationPeriod=['. $param . ']');
-			// $dropdown .= '<option value="'.$value['MFLCode'].'">'.
-			// $site['data'][0]['FacilityName'].'</option>';
-
-			//echo "<pre>";print_r($site);echo "</pre>";die();
-
-			// $data['categories'][$key] = $site['data'][0]['FacilityName'];
 			$data['categories'][$key] = $value['MFLCode'];
 
 			foreach ($site['data'][0]['Period'] as $key2 => $value2) {
@@ -1006,6 +898,26 @@ class Sum_model extends MY_Model
 		}
 
 		
+		return $data;
+	}
+
+	function get_county_sites_outcomes($param, $county){
+		$data['county_outcomes'][0]['name'] = 'Not Suppresed';
+		$data['county_outcomes'][1]['name'] = 'Suppresed';
+
+		$info = $this->req('https://api.nascop.org/vl/ver1.0/TopFacilities?entity=county&mflCode=' . $county . '&aggregationPeriod=[' . $param . ']');
+
+		$size = count($info['data']);
+		
+		foreach ($info['data'] as $key => $value) {
+			
+			$data['categories'][$key] = $value['name'];
+
+			$data["county_outcomes"][0]["data"][$key] = $value['nonsuppressed'];
+			$data["county_outcomes"][1]["data"][$key] = $value['suppressed'];
+
+		}
+
 		return $data;
 	}
 

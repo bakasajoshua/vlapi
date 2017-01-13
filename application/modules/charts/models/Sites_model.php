@@ -146,6 +146,7 @@ class Sites_model extends MY_Model
 		return $data;
 	}
 
+	// Not Possible
 	function site_outcomes_chart($year=null,$month=null,$site=null)
 	{
 		if ($year==null || $year=='null') {

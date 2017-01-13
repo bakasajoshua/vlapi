@@ -119,7 +119,7 @@ class Template extends MY_Controller
 
 	function check_counties(){
 		$this->load->model('template_model');
-		echo $this->template_model->get_counties_dropdown();
+		echo $this->template_model->get_site_dropdown();
 	}
 }
 ?>

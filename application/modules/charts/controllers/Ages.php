@@ -9,12 +9,13 @@ class Ages extends MY_Controller
 	function __construct()
 	{
 		parent::__construct();
-		$this->load->model('ages_model');
+		$this->load->model('agesapi_model');
 	}
 
 	function age_outcomes($year=NULL,$month=NULL)
 	{
-		$data['outcomes']= $this->ages_model->ages_outcomes($year,$month);
+		$data['outcomes']= $this->agesapi_model->ages_outcomes($year,$month);
+		//echo "<pre>";print_r($data);die();
 
 		$this->load->view('county_outcomes_view', $data);
 	}
